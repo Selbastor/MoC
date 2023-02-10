@@ -10,11 +10,11 @@ import matplotlib as plt
 
 # Inputs
 
-Mdes = 2.8
-gamma = 1.4
-thetamin = 0.4
-nolines = 5
-Steps = 10
+Mdes = 4
+gamma = 5/3
+thetamin = 0.01
+nolines = 100
+Steps = 15
 Throat = 1
 
 # Prandtl-Meyer function
@@ -136,6 +136,7 @@ def Mu(nolines=nolines, Steps=Steps):
 
 Mu = Mu()
 
+#Calculates the coordinates in the X-Y plane of the characteristic line intersections and boundary
 
 def Coordinates(nolines=nolines, Throat=Throat, Steps=Steps):
     points = nolines
@@ -166,19 +167,17 @@ def Coordinates(nolines=nolines, Throat=Throat, Steps=Steps):
                 Y[l] = Y[l-1]+(X[l]-X[l-1])*m.tan(m.radians(0.5 *
                                                             (Mu[l-1]+ThetaAndNu[0][l-1]+Mu[l]+ThetaAndNu[0][l])))
             else:
-                sub = 0
+                stack = 0
                 count = nolines+1
                 for i in reversed(range(nolines+1)):
                     if l > count + i:
                         count = count+i
-                        sub = sub+1
+                        stack = stack+1
                     else:
-                        sub = nolines-sub
-                        X[l] = ((X[l-sub]*m.tan(m.radians(0.5*(ThetaAndNu[0][l-sub]-Mu[l-sub]+ThetaAndNu[0][l]-Mu[l]))))-(X[l-1]*m.tan(m.radians(0.5*(ThetaAndNu[0][l-1]+Mu[l-1]+ThetaAndNu[0][l]+Mu[l])))) +
-                                Y[l-1]-Y[l-sub])/(m.tan(m.radians(0.5*(ThetaAndNu[0][l-sub]-Mu[l-sub]+ThetaAndNu[0][l]-Mu[l])))-m.tan(m.radians(0.5*(ThetaAndNu[0][l-1]+Mu[l-1]+ThetaAndNu[0][l]+Mu[l]))))
-                        Y[l] = Y[l-1]+(X[l]-X[l-1])*m.tan(m.radians(0.5 *
-                                                                    (Mu[l-1]+ThetaAndNu[0][l-1]+Mu[l]+ThetaAndNu[0][l])))
-                        count = -1*nolines
+                        sub = nolines - stack
+                        X[l] = ((X[l-sub]*m.tan(m.radians(0.5*(ThetaAndNu[0][l-sub]-Mu[l-sub]+ThetaAndNu[0][l]-Mu[l]))))-(X[l-1]*m.tan(m.radians(0.5*(ThetaAndNu[0][l-1]+Mu[l-1]+ThetaAndNu[0][l]+Mu[l]))))+Y[l-1]-Y[l-sub])/(m.tan(m.radians(0.5*(ThetaAndNu[0][l-sub]-Mu[l-sub]+ThetaAndNu[0][l]-Mu[l])))-m.tan(m.radians(0.5*(ThetaAndNu[0][l-1]+Mu[l-1]+ThetaAndNu[0][l]+Mu[l]))))
+                        Y[l] = Y[l-1]+(X[l]-X[l-1])*m.tan(m.radians(0.5*(Mu[l-1]+ThetaAndNu[0][l-1]+Mu[l]+ThetaAndNu[0][l])))
+                        count = 0
         elif X[l] == "Boundary" and Y[l] == "Boundary":
             if l == nolines:
                 X[l] = (Y[l-1]-X[l-1]*m.tan(m.radians(ThetaAndNu[0][l-1]+Mu[l-1]))-Throat)/(m.tan(m.radians(
@@ -187,16 +186,29 @@ def Coordinates(nolines=nolines, Throat=Throat, Steps=Steps):
                     m.tan(m.radians(ThetaAndNu[0][l-1]+Mu[l-1]))
                 p = l
             else:
-                print(p)
-                print(X[p], Y[p])
-                print(X[l-1], Y[l-1])
-                print(Mu[p], ThetaAndNu[0][p])
                 X[l] = (X[p]*m.tan(m.radians(0.5*(ThetaAndNu[0][p]+ThetaAndNu[0][l])))-X[l-1]*m.tan(m.radians(ThetaAndNu[0][l-1]+Mu[l-1])) +
                         Y[l-1]-Y[p])/(m.tan(m.radians(0.5*(ThetaAndNu[0][p]+ThetaAndNu[0][l])))-m.tan(m.radians(ThetaAndNu[0][l-1]+Mu[l-1])))
                 Y[l] = Y[l-1]+(X[l]-X[l-1]) * \
                     m.tan(m.radians(ThetaAndNu[0][l-1]+Mu[l-1]))
                 p = l
+        Percentage(l, points)
+        
     return [X, Y]
+
+#Prints progress for debug
+
+def Percentage(current, total):
+    fold = 0
+    if round((current/total)*100) != round((fold/total)*100):
+        print(fold)
+        print(f"{round((current/total)*100)}% complete")
+    else:
+        fold = current
+    
 
 
 Coordinates = Coordinates()
+Coordinates[0].insert(0, 0)
+Coordinates[1].insert(0, Throat)
+#for degbuggin
+plt.pyplot.scatter(Coordinates[0], Coordinates[1], s=0.01)
