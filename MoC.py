@@ -7,18 +7,24 @@ Created on Fri Feb 10 2023
 
 import math as m
 import matplotlib as plt
+import numpy as np
 
 # Inputs
 
 Mdes = 4
 gamma = 5/3
 thetamin = 0.01
-nolines = 100
-Steps = 15
+nolines = 1000
+Steps = 5
 Throat = 1
 
-# Prandtl-Meyer function
+#Prints progress for debug
 
+def Percentage(current, total):
+    if round((current/total)*100) != round(((current-1)/total)*100):
+        print(f"{round((current/total)*100)}% complete")
+
+# Prandtl-Meyer function
 
 def PrandtlMeyer(Mdes=Mdes, gamma=gamma):
     return ((gamma+1)/(gamma-1))**0.5*m.degrees(m.atan((((gamma-1)/(gamma+1))*(Mdes**2-1))**0.5))-m.degrees(m.atan((Mdes**2-1)**0.5))
@@ -133,7 +139,6 @@ def Mu(nolines=nolines, Steps=Steps):
             m.degrees(m.asin(1/(PrandtlMeyerNR(ThetaAndNu[1][l], Steps)))))
     return mu
 
-
 Mu = Mu()
 
 #Calculates the coordinates in the X-Y plane of the characteristic line intersections and boundary
@@ -192,23 +197,34 @@ def Coordinates(nolines=nolines, Throat=Throat, Steps=Steps):
                     m.tan(m.radians(ThetaAndNu[0][l-1]+Mu[l-1]))
                 p = l
         Percentage(l, points)
-        
     return [X, Y]
 
-#Prints progress for debug
-
-def Percentage(current, total):
-    fold = 0
-    if round((current/total)*100) != round((fold/total)*100):
-        print(fold)
-        print(f"{round((current/total)*100)}% complete")
-    else:
-        fold = current
-    
-
-
 Coordinates = Coordinates()
-Coordinates[0].insert(0, 0)
-Coordinates[1].insert(0, Throat)
-#for degbuggin
-plt.pyplot.scatter(Coordinates[0], Coordinates[1], s=0.01)
+
+#Show only boundary coordinates
+
+def Boundary(nolines=nolines):
+    pos = -1
+    BP = []
+    X = [0]
+    Y = [Throat]
+    for l in reversed(range(nolines+2)):
+        if l > 1:
+            pos = pos+l
+            BP.append(pos)
+    for l in BP:
+        X.append(Coordinates[0][l])
+        Y.append(Coordinates[1][l])
+    return [X, Y]
+
+Boundary = Boundary()
+
+#Fit curve to datapoints
+
+def Curve():
+    c = np.poly1d(np.polyfit(Boundary[0], Boundary[1], 6))
+    plt.pyplot.plot(Boundary[0], c(Boundary[0]))
+    
+Curve()
+
+        
