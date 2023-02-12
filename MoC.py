@@ -6,17 +6,16 @@ Created on Fri Feb 10 2023
 """
 
 import math as m
-import matplotlib as plt
-import numpy as np
+import matplotlib.pyplot as plt
 import pandas as pd
 
 # Inputs
 
 Mdes = 10
 gamma = 5/3
-thetamin = 0.04
+thetamin = 0.01
 nolines = 100
-Steps = 5
+Steps = 4
 Throat = 1
 
 
@@ -101,8 +100,7 @@ def GetThetaAndNu(RI, nolines=nolines):
         if RI[1][l] != "N/A":
             Theta.append((RI[1][l]-RI[0][l])/2)
         else:
-            Theta.append(
-                (RI[1][l-1]-RI[0][l-1])/2)
+            Theta.append((RI[1][l-1]-RI[0][l-1])/2)
         Nu.append(RI[0][l]+Theta[l])
     return [Theta, Nu]
 
@@ -113,9 +111,7 @@ def GetThetaAndNu(RI, nolines=nolines):
 def PrandtlMeyerNR(Nu, Steps=Steps):
     M = 1.1
     for l in range(Steps):
-        M = M - (((gamma+1)/(gamma-1))**0.5*(m.atan((((gamma-1)/(gamma+1))*(M**2-1))**0.5))-(m.atan((M**2-1)**0.5))-m.radians(Nu)) / \
-            ((((gamma+1)/(gamma-1))**0.5*((gamma-1)/(gamma+1))**0.5*M) /
-             ((((gamma-1)/(gamma+1))*(M**2-1)+1)*(M**2-1)**0.5)-1/(M*(M**2-1)**0.5))
+        M = M - (((gamma+1)/(gamma-1))**0.5*(m.atan((((gamma-1)/(gamma+1))*(M**2-1))**0.5))-(m.atan((M**2-1)**0.5))-m.radians(Nu))/((((gamma+1)/(gamma-1))**0.5*((gamma-1)/(gamma+1))**0.5*M)/((((gamma-1)/(gamma+1))*(M**2-1)+1)*(M**2-1)**0.5)-1/(M*(M**2-1)**0.5))
     return M
 
 # Calculate Mu
@@ -127,8 +123,7 @@ def GetMu(ThetaAndNu, nolines=nolines, Steps=Steps):
     for l in range(nolines+1):
         points = points + l
     for l in range(points):
-        mu.append(
-            m.degrees(m.asin(1/(PrandtlMeyerNR(ThetaAndNu[1][l], Steps)))))
+        mu.append(m.degrees(m.asin(1/(PrandtlMeyerNR(ThetaAndNu[1][l], Steps)))))
     return mu
 
 
@@ -148,8 +143,7 @@ def Coordinates(theta, Mu, ThetaAndNu, nolines=nolines, Throat=Throat, Steps=Ste
         if leap > 0:
             Y[sym] = 0
             if sym == 0:
-                X[sym] = (Throat/(m.tan(m.radians(0.5*(theta[l] -
-                                                       m.degrees(m.asin(1/(PrandtlMeyerNR(theta[l], Steps))))-Mu[sym])))))
+                X[sym] = (Throat/(m.tan(m.radians(0.5*(theta[l]-m.degrees(m.asin(1/(PrandtlMeyerNR(theta[l], Steps))))-Mu[sym])))))
             if sym != 0:
                 reflec.append(sym)
             sym = sym + leap + 1
@@ -163,10 +157,8 @@ def Coordinates(theta, Mu, ThetaAndNu, nolines=nolines, Throat=Throat, Steps=Ste
     for l in range(points):
         if X[l] == None and Y[l] == None or l in reflec:
             if l < nolines:
-                X[l] = (-1*X[l-1]*m.tan(m.radians(0.5*(ThetaAndNu[0][l-1]+Mu[l-1]+ThetaAndNu[0][l]+Mu[l])))+Y[l-1]-1)/(m.tan(m.radians(0.5*(theta[l]-m.degrees(
-                    m.asin(1/(PrandtlMeyerNR(theta[l], Steps))))+ThetaAndNu[0][l]-Mu[l])))-m.tan(m.radians(0.5*(ThetaAndNu[0][l-1]+Mu[l-1]+ThetaAndNu[0][l]+Mu[l]))))
-                Y[l] = Y[l-1]+(X[l]-X[l-1])*m.tan(m.radians(0.5 *
-                                                            (Mu[l-1]+ThetaAndNu[0][l-1]+Mu[l]+ThetaAndNu[0][l])))
+                X[l] = (-1*X[l-1]*m.tan(m.radians(0.5*(ThetaAndNu[0][l-1]+Mu[l-1]+ThetaAndNu[0][l]+Mu[l])))+Y[l-1]-1)/(m.tan(m.radians(0.5*(theta[l]-m.degrees(m.asin(1/(PrandtlMeyerNR(theta[l], Steps))))+ThetaAndNu[0][l]-Mu[l])))-m.tan(m.radians(0.5*(ThetaAndNu[0][l-1]+Mu[l-1]+ThetaAndNu[0][l]+Mu[l]))))
+                Y[l] = Y[l-1]+(X[l]-X[l-1])*m.tan(m.radians(0.5*(Mu[l-1]+ThetaAndNu[0][l-1]+Mu[l]+ThetaAndNu[0][l])))
             else:
                 stack = 0
                 count = nolines+1
@@ -179,28 +171,21 @@ def Coordinates(theta, Mu, ThetaAndNu, nolines=nolines, Throat=Throat, Steps=Ste
                         stack = stack+1
                     elif l in reflec:
                         sub = nolines - stack
-                        X[l] = X[l-sub]-(Y[l-sub]/(
-                            m.tan(m.radians(0.5*(ThetaAndNu[0][l-sub]-Mu[l-sub]+ThetaAndNu[0][l]-Mu[l])))))
+                        X[l] = X[l-sub]-(Y[l-sub]/(m.tan(m.radians(0.5*(ThetaAndNu[0][l-sub]-Mu[l-sub]+ThetaAndNu[0][l]-Mu[l])))))
                         comp = 1
                     else:
                         sub = nolines - stack
-                        X[l] = ((X[l-sub]*m.tan(m.radians(0.5*(ThetaAndNu[0][l-sub]-Mu[l-sub]+ThetaAndNu[0][l]-Mu[l]))))-(X[l-1]*m.tan(m.radians(0.5*(ThetaAndNu[0][l-1]+Mu[l-1]+ThetaAndNu[0][l]+Mu[l])))) +
-                                Y[l-1]-Y[l-sub])/(m.tan(m.radians(0.5*(ThetaAndNu[0][l-sub]-Mu[l-sub]+ThetaAndNu[0][l]-Mu[l])))-m.tan(m.radians(0.5*(ThetaAndNu[0][l-1]+Mu[l-1]+ThetaAndNu[0][l]+Mu[l]))))
-                        Y[l] = Y[l-1]+(X[l]-X[l-1])*m.tan(m.radians(0.5 *
-                                                                    (Mu[l-1]+ThetaAndNu[0][l-1]+Mu[l]+ThetaAndNu[0][l])))
+                        X[l] = ((X[l-sub]*m.tan(m.radians(0.5*(ThetaAndNu[0][l-sub]-Mu[l-sub]+ThetaAndNu[0][l]-Mu[l]))))-(X[l-1]*m.tan(m.radians(0.5*(ThetaAndNu[0][l-1]+Mu[l-1]+ThetaAndNu[0][l]+Mu[l]))))+Y[l-1]-Y[l-sub])/(m.tan(m.radians(0.5*(ThetaAndNu[0][l-sub]-Mu[l-sub]+ThetaAndNu[0][l]-Mu[l])))-m.tan(m.radians(0.5*(ThetaAndNu[0][l-1]+Mu[l-1]+ThetaAndNu[0][l]+Mu[l]))))
+                        Y[l] = Y[l-1]+(X[l]-X[l-1])*m.tan(m.radians(0.5*(Mu[l-1]+ThetaAndNu[0][l-1]+Mu[l]+ThetaAndNu[0][l])))
                         comp = 1
         elif X[l] == "Boundary" and Y[l] == "Boundary":
             if l == nolines:
-                X[l] = (Y[l-1]-X[l-1]*m.tan(m.radians(ThetaAndNu[0][l-1]+Mu[l-1]))-Throat)/(m.tan(m.radians(
-                    0.5*(theta[nolines-1]+ThetaAndNu[0][l])))-m.tan(m.radians(ThetaAndNu[0][l-1]+Mu[l-1])))
-                Y[l] = Y[l-1]+(X[l]-X[l-1]) * \
-                    m.tan(m.radians(ThetaAndNu[0][l-1]+Mu[l-1]))
+                X[l] = (Y[l-1]-X[l-1]*m.tan(m.radians(ThetaAndNu[0][l-1]+Mu[l-1]))-Throat)/(m.tan(m.radians(0.5*(theta[nolines-1]+ThetaAndNu[0][l])))-m.tan(m.radians(ThetaAndNu[0][l-1]+Mu[l-1])))
+                Y[l] = Y[l-1]+(X[l]-X[l-1])*m.tan(m.radians(ThetaAndNu[0][l-1]+Mu[l-1]))
                 p = l
             else:
-                X[l] = (X[p]*m.tan(m.radians(0.5*(ThetaAndNu[0][p]+ThetaAndNu[0][l])))-X[l-1]*m.tan(m.radians(ThetaAndNu[0][l-1]+Mu[l-1])) +
-                        Y[l-1]-Y[p])/(m.tan(m.radians(0.5*(ThetaAndNu[0][p]+ThetaAndNu[0][l])))-m.tan(m.radians(ThetaAndNu[0][l-1]+Mu[l-1])))
-                Y[l] = Y[l-1]+(X[l]-X[l-1]) * \
-                    m.tan(m.radians(ThetaAndNu[0][l-1]+Mu[l-1]))
+                X[l] = (X[p]*m.tan(m.radians(0.5*(ThetaAndNu[0][p]+ThetaAndNu[0][l])))-X[l-1]*m.tan(m.radians(ThetaAndNu[0][l-1]+Mu[l-1]))+Y[l-1]-Y[p])/(m.tan(m.radians(0.5*(ThetaAndNu[0][p]+ThetaAndNu[0][l])))-m.tan(m.radians(ThetaAndNu[0][l-1]+Mu[l-1])))
+                Y[l] = Y[l-1]+(X[l]-X[l-1])*m.tan(m.radians(ThetaAndNu[0][l-1]+Mu[l-1]))
                 p = l
         Percentage(l, points)
     return [X, Y]
@@ -242,10 +227,8 @@ def All(theta, RI, ThetaAndNu, Mu, Coords, CR, nolines=nolines, Steps=Steps):
         points = points + l
     for l in range(points):
         Mach.append(PrandtlMeyerNR(ThetaAndNu[1][l], Steps))
-    CPoints = pd.DataFrame({f'R\u207A': RI[0], f'R\u207B': RI[1], f'\u03B8': ThetaAndNu[0],
-                           f'\u03BD': ThetaAndNu[1], 'M': Mach, f'\u03BC': Mu, 'x': Coords[0], 'y': Coords[1]})
-    CLines = pd.DataFrame({f'R\u207A': CR[0], f'R\u207B': CR[1],
-                          f'\u03B8': Ctheta, f'\u03BD': Ctheta, 'M': cMach, f'\u03BC': cMu, 'x': cx, 'y': cy})
+    CPoints = pd.DataFrame({f'R\u207A': RI[0], f'R\u207B': RI[1], f'\u03B8': ThetaAndNu[0], f'\u03BD': ThetaAndNu[1], 'M': Mach, f'\u03BC': Mu, 'x': Coords[0], 'y': Coords[1]})
+    CLines = pd.DataFrame({f'R\u207A': CR[0], f'R\u207B': CR[1], f'\u03B8': theta, f'\u03BD': theta, 'M': cMach, f'\u03BC': cMu, 'x': cx, 'y': cy})
     CPoints.to_csv("CPoints.csv", sep='\t', encoding='utf-16')
     CLines.to_csv("CLines.csv", sep='\t', encoding='utf-16')
 
@@ -253,7 +236,8 @@ def All(theta, RI, ThetaAndNu, Mu, Coords, CR, nolines=nolines, Steps=Steps):
 
 
 def AllFunctions(Mdes, gamma, thetamin, nolines, Steps, Throat):
-    TMax = thetamax(Mdes, PrandtlMeyer(Mdes, gamma))
+    PM = PrandtlMeyer(Mdes, gamma)
+    TMax = thetamax(PM, Mdes)
     theta = Ctheta(TMax, nolines, thetamin)
     CR = CharacteristicRiemann(theta, nolines)
     RI = RiemannInvariants(CR, nolines)
@@ -262,8 +246,8 @@ def AllFunctions(Mdes, gamma, thetamin, nolines, Steps, Throat):
     Coords = Coordinates(theta, Mu, ThetaAndNu, nolines, Throat, Steps)
     Boundary = BoundaryPoints(Coords, nolines, Throat)
     All(theta, RI, ThetaAndNu, Mu, Coords, CR, nolines, Steps)
-    plt.pyplot.plot(Boundary[0], Boundary[1])
-    #plt.pyplot.scatter(Coordinates[0], Coordinates[1])
+    plt.plot(Boundary[0], Boundary[1])
+    #plt.scatter(Coords[0], Coords[1])
 
 
 AllFunctions(Mdes, gamma, thetamin, nolines, Steps, Throat)
