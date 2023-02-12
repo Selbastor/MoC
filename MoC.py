@@ -14,8 +14,8 @@ import pandas as pd
 
 Mdes = 10
 gamma = 5/3
-thetamin = 0.4
-nolines = 10
+thetamin = 0.04
+nolines = 100
 Steps = 5
 Throat = 1
 
@@ -156,11 +156,15 @@ def Coordinates(nolines=nolines, Throat=Throat, Steps=Steps):
     Y = [None]*points
     sym = 0
     leap = nolines
+    reflec = []
     for l in range(nolines):
         if leap > 0:
             Y[sym] = 0
-            X[sym] = -1*(Throat/(m.tan(m.radians(0.5*(theta[l] -
-                         m.degrees(m.asin(1/(PrandtlMeyerNR(theta[l], Steps))))-Mu[sym])))))
+            if sym == 0:
+                X[sym] = (Throat/(m.tan(m.radians(0.5*(theta[l] -
+                                                       m.degrees(m.asin(1/(PrandtlMeyerNR(theta[l], Steps))))-Mu[sym])))))
+            if sym != 0:
+                reflec.append(sym)
             sym = sym + leap + 1
             leap = leap - 1
             if sym > 0:
@@ -170,7 +174,7 @@ def Coordinates(nolines=nolines, Throat=Throat, Steps=Steps):
         Y[-1] = "Boundary"
     p = 0
     for l in range(points):
-        if X[l] == None and Y[l] == None:
+        if X[l] == None and Y[l] == None or l in reflec:
             if l < nolines:
                 X[l] = (-1*X[l-1]*m.tan(m.radians(0.5*(ThetaAndNu[0][l-1]+Mu[l-1]+ThetaAndNu[0][l]+Mu[l])))+Y[l-1]-1)/(m.tan(m.radians(0.5*(theta[l]-m.degrees(
                     m.asin(1/(PrandtlMeyerNR(theta[l], Steps))))+ThetaAndNu[0][l]-Mu[l])))-m.tan(m.radians(0.5*(ThetaAndNu[0][l-1]+Mu[l-1]+ThetaAndNu[0][l]+Mu[l]))))
@@ -183,18 +187,20 @@ def Coordinates(nolines=nolines, Throat=Throat, Steps=Steps):
                 for i in reversed(range(nolines+1)):
                     if comp == 1:
                         comp = 1
-                    elif l > count + i:
+                    elif l >= count + i:
                         count = count+i
                         stack = stack+1
+                    elif l in reflec:
+                        sub = nolines - stack
+                        X[l] = X[l-sub]-(Y[l-sub]/(
+                            m.tan(m.radians(0.5*(ThetaAndNu[0][l-sub]-Mu[l-sub]+ThetaAndNu[0][l]-Mu[l])))))
+                        comp = 1
                     else:
                         sub = nolines - stack
-                        # print(X[l-sub], ThetaAndNu[0][l-sub], Mu[l-sub], ThetaAndNu[0]
-                        #      [l], Mu[l], ThetaAndNu[0][l-1], Mu[l-1], Y[l-1], Y[l-sub])
                         X[l] = ((X[l-sub]*m.tan(m.radians(0.5*(ThetaAndNu[0][l-sub]-Mu[l-sub]+ThetaAndNu[0][l]-Mu[l]))))-(X[l-1]*m.tan(m.radians(0.5*(ThetaAndNu[0][l-1]+Mu[l-1]+ThetaAndNu[0][l]+Mu[l])))) +
                                 Y[l-1]-Y[l-sub])/(m.tan(m.radians(0.5*(ThetaAndNu[0][l-sub]-Mu[l-sub]+ThetaAndNu[0][l]-Mu[l])))-m.tan(m.radians(0.5*(ThetaAndNu[0][l-1]+Mu[l-1]+ThetaAndNu[0][l]+Mu[l]))))
                         Y[l] = Y[l-1]+(X[l]-X[l-1])*m.tan(m.radians(0.5 *
                                                                     (Mu[l-1]+ThetaAndNu[0][l-1]+Mu[l]+ThetaAndNu[0][l])))
-                        count = nolines*nolines
                         comp = 1
         elif X[l] == "Boundary" and Y[l] == "Boundary":
             if l == nolines:
@@ -235,16 +241,6 @@ def Boundary(nolines=nolines):
 
 Boundary = Boundary()
 
-# Fit curve to datapoints
-
-
-def Curve():
-    c = np.poly1d(np.polyfit(Boundary[0], Boundary[1], 6))
-    plt.pyplot.plot(Boundary[0], c(Boundary[0]))
-
-
-# Curve()
-
 
 # Returns all the values (mainly for degbugging)
 
@@ -272,6 +268,7 @@ def All(nolines=nolines, Steps=Steps):
     CLines.to_csv("CLines.csv", sep='\t', encoding='utf-16')
 
 
-# All()
+All()
 
-plt.pyplot.scatter(Boundary[0], Boundary[1])
+plt.pyplot.plot(Boundary[0], Boundary[1])
+#plt.pyplot.scatter(Coordinates[0], Coordinates[1])
