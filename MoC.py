@@ -19,6 +19,7 @@ nolines = 100
 Steps = 5
 Throat = 1
 
+
 # Prints progress for debug
 
 
@@ -33,33 +34,27 @@ def PrandtlMeyer(Mdes=Mdes, gamma=gamma):
     return ((gamma+1)/(gamma-1))**0.5*m.degrees(m.atan((((gamma-1)/(gamma+1))*(Mdes**2-1))**0.5))-m.degrees(m.atan((Mdes**2-1)**0.5))
 
 
-PrandtlMeyer = PrandtlMeyer()
-
 # Find the maximum turning angle
 
 
-def thetamax(Mdes=Mdes):
-    return PrandtlMeyer/2
+def thetamax(PM, Mdes=Mdes):
+    return PM/2
 
-
-thetamax = thetamax()
 
 # Find the respective turning angles
 
 
-def theta(nolines=nolines, thetamin=thetamin):
+def Ctheta(TMax, nolines=nolines, thetamin=thetamin):
     TurningAngles = []
     for l in range(nolines):
-        TurningAngles.append(thetamin+((l*(thetamax-thetamin))/(nolines-1)))
+        TurningAngles.append(thetamin+((l*(TMax-thetamin))/(nolines-1)))
     return TurningAngles
 
-
-theta = theta()
 
 # Calculate the Riemann Invariants for each chacarteristic line
 
 
-def CharacteristicRiemann(nolines=nolines):
+def CharacteristicRiemann(theta, nolines=nolines):
     CRPlus = []
     CRMinus = []
     for l in range(nolines):
@@ -68,12 +63,10 @@ def CharacteristicRiemann(nolines=nolines):
     return [CRPlus, CRMinus]
 
 
-CharacteristicRiemann = CharacteristicRiemann()
-
 # Calculate the Riemann Invariants for each point
 
 
-def RiemannInvariants(nolines=nolines):
+def RiemannInvariants(CR, nolines=nolines):
     points = nolines
     for l in range(nolines+1):
         points = points + l
@@ -85,38 +78,34 @@ def RiemannInvariants(nolines=nolines):
     RMinus = []
     for l in range(nolines):
         for i in range(nolines-l+1):
-            RPlus.append(CharacteristicRiemann[1][l])
+            RPlus.append(CR[1][l])
         for i in range(nolines):
             if i >= pos:
-                RMinus.append(CharacteristicRiemann[1][i])
+                RMinus.append(CR[1][i])
                 if i == nolines-1:
                     RMinus.append("N/A")
         pos = pos + 1
     return [RPlus, RMinus]
 
 
-RiemannInvariants = RiemannInvariants()
-
 # Calculate Nu and the turning angles from the Riemann Invariants
 
 
-def ThetaAndNu(nolines=nolines):
+def GetThetaAndNu(RI, nolines=nolines):
     points = nolines
     for l in range(nolines+1):
         points = points + l
     Theta = []
     Nu = []
     for l in range(points):
-        if RiemannInvariants[1][l] != "N/A":
-            Theta.append((RiemannInvariants[1][l]-RiemannInvariants[0][l])/2)
+        if RI[1][l] != "N/A":
+            Theta.append((RI[1][l]-RI[0][l])/2)
         else:
             Theta.append(
-                (RiemannInvariants[1][l-1]-RiemannInvariants[0][l-1])/2)
-        Nu.append(RiemannInvariants[0][l]+Theta[l])
+                (RI[1][l-1]-RI[0][l-1])/2)
+        Nu.append(RI[0][l]+Theta[l])
     return [Theta, Nu]
 
-
-ThetaAndNu = ThetaAndNu()
 
 # Use the Newton Rhapson method to get the Mach number form the PrandtMeyer function
 
@@ -132,7 +121,7 @@ def PrandtlMeyerNR(Nu, Steps=Steps):
 # Calculate Mu
 
 
-def Mu(nolines=nolines, Steps=Steps):
+def GetMu(ThetaAndNu, nolines=nolines, Steps=Steps):
     points = nolines
     mu = []
     for l in range(nolines+1):
@@ -143,12 +132,10 @@ def Mu(nolines=nolines, Steps=Steps):
     return mu
 
 
-Mu = Mu()
-
 # Calculates the coordinates in the X-Y plane of the characteristic line intersections and boundary
 
 
-def Coordinates(nolines=nolines, Throat=Throat, Steps=Steps):
+def Coordinates(theta, Mu, ThetaAndNu, nolines=nolines, Throat=Throat, Steps=Steps):
     points = nolines
     for l in range(nolines+1):
         points = points + l
@@ -219,12 +206,10 @@ def Coordinates(nolines=nolines, Throat=Throat, Steps=Steps):
     return [X, Y]
 
 
-Coordinates = Coordinates()
-
 # Show only boundary coordinates
 
 
-def Boundary(nolines=nolines):
+def BoundaryPoints(Coords, nolines=nolines, Throat=Throat):
     pos = -1
     BP = []
     X = [0]
@@ -234,17 +219,14 @@ def Boundary(nolines=nolines):
             pos = pos+l
             BP.append(pos)
     for l in BP:
-        X.append(Coordinates[0][l])
-        Y.append(Coordinates[1][l])
+        X.append(Coords[0][l])
+        Y.append(Coords[1][l])
     return [X, Y]
-
-
-Boundary = Boundary()
 
 
 # Returns all the values (mainly for degbugging)
 
-def All(nolines=nolines, Steps=Steps):
+def All(theta, RI, ThetaAndNu, Mu, Coords, CR, nolines=nolines, Steps=Steps):
     Mach = []
     cMach = []
     cMu = []
@@ -260,15 +242,28 @@ def All(nolines=nolines, Steps=Steps):
         points = points + l
     for l in range(points):
         Mach.append(PrandtlMeyerNR(ThetaAndNu[1][l], Steps))
-    CPoints = pd.DataFrame({f'R\u207A': RiemannInvariants[0], f'R\u207B': RiemannInvariants[1], f'\u03B8': ThetaAndNu[0],
-                           f'\u03BD': ThetaAndNu[1], 'M': Mach, f'\u03BC': Mu, 'x': Coordinates[0], 'y': Coordinates[1]})
-    CLines = pd.DataFrame({f'R\u207A': CharacteristicRiemann[0], f'R\u207B': CharacteristicRiemann[1],
-                          f'\u03B8': theta, f'\u03BD': theta, 'M': cMach, f'\u03BC': cMu, 'x': cx, 'y': cy})
+    CPoints = pd.DataFrame({f'R\u207A': RI[0], f'R\u207B': RI[1], f'\u03B8': ThetaAndNu[0],
+                           f'\u03BD': ThetaAndNu[1], 'M': Mach, f'\u03BC': Mu, 'x': Coords[0], 'y': Coords[1]})
+    CLines = pd.DataFrame({f'R\u207A': CR[0], f'R\u207B': CR[1],
+                          f'\u03B8': Ctheta, f'\u03BD': Ctheta, 'M': cMach, f'\u03BC': cMu, 'x': cx, 'y': cy})
     CPoints.to_csv("CPoints.csv", sep='\t', encoding='utf-16')
     CLines.to_csv("CLines.csv", sep='\t', encoding='utf-16')
 
+# Combine all the functions to get a result
 
-All()
 
-plt.pyplot.plot(Boundary[0], Boundary[1])
-#plt.pyplot.scatter(Coordinates[0], Coordinates[1])
+def AllFunctions(Mdes, gamma, thetamin, nolines, Steps, Throat):
+    TMax = thetamax(Mdes, PrandtlMeyer(Mdes, gamma))
+    theta = Ctheta(TMax, nolines, thetamin)
+    CR = CharacteristicRiemann(theta, nolines)
+    RI = RiemannInvariants(CR, nolines)
+    ThetaAndNu = GetThetaAndNu(RI, nolines)
+    Mu = GetMu(ThetaAndNu, nolines, Steps)
+    Coords = Coordinates(theta, Mu, ThetaAndNu, nolines, Throat, Steps)
+    Boundary = BoundaryPoints(Coords, nolines, Throat)
+    All(theta, RI, ThetaAndNu, Mu, Coords, CR, nolines, Steps)
+    plt.pyplot.plot(Boundary[0], Boundary[1])
+    #plt.pyplot.scatter(Coordinates[0], Coordinates[1])
+
+
+AllFunctions(Mdes, gamma, thetamin, nolines, Steps, Throat)
