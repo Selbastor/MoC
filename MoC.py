@@ -12,10 +12,10 @@ import pandas as pd
 
 # Inputs
 
-Mdes = 2.8
+Mdes = 10
 gamma = 5/3
 thetamin = 0.4
-nolines = 5
+nolines = 10
 Steps = 5
 Throat = 1
 
@@ -179,17 +179,23 @@ def Coordinates(nolines=nolines, Throat=Throat, Steps=Steps):
             else:
                 stack = 0
                 count = nolines+1
+                comp = 0
                 for i in reversed(range(nolines+1)):
-                    if l > count + i:
+                    if comp == 1:
+                        comp = 1
+                    elif l > count + i:
                         count = count+i
                         stack = stack+1
                     else:
                         sub = nolines - stack
+                        # print(X[l-sub], ThetaAndNu[0][l-sub], Mu[l-sub], ThetaAndNu[0]
+                        #      [l], Mu[l], ThetaAndNu[0][l-1], Mu[l-1], Y[l-1], Y[l-sub])
                         X[l] = ((X[l-sub]*m.tan(m.radians(0.5*(ThetaAndNu[0][l-sub]-Mu[l-sub]+ThetaAndNu[0][l]-Mu[l]))))-(X[l-1]*m.tan(m.radians(0.5*(ThetaAndNu[0][l-1]+Mu[l-1]+ThetaAndNu[0][l]+Mu[l])))) +
                                 Y[l-1]-Y[l-sub])/(m.tan(m.radians(0.5*(ThetaAndNu[0][l-sub]-Mu[l-sub]+ThetaAndNu[0][l]-Mu[l])))-m.tan(m.radians(0.5*(ThetaAndNu[0][l-1]+Mu[l-1]+ThetaAndNu[0][l]+Mu[l]))))
                         Y[l] = Y[l-1]+(X[l]-X[l-1])*m.tan(m.radians(0.5 *
                                                                     (Mu[l-1]+ThetaAndNu[0][l-1]+Mu[l]+ThetaAndNu[0][l])))
-                        count = 0
+                        count = nolines*nolines
+                        comp = 1
         elif X[l] == "Boundary" and Y[l] == "Boundary":
             if l == nolines:
                 X[l] = (Y[l-1]-X[l-1]*m.tan(m.radians(ThetaAndNu[0][l-1]+Mu[l-1]))-Throat)/(m.tan(m.radians(
@@ -237,7 +243,7 @@ def Curve():
     plt.pyplot.plot(Boundary[0], c(Boundary[0]))
 
 
-Curve()
+# Curve()
 
 
 # Returns all the values (mainly for degbugging)
@@ -266,4 +272,6 @@ def All(nolines=nolines, Steps=Steps):
     CLines.to_csv("CLines.csv", sep='\t', encoding='utf-16')
 
 
-All()
+# All()
+
+plt.pyplot.scatter(Boundary[0], Boundary[1])
