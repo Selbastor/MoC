@@ -8,13 +8,14 @@ Created on Fri Feb 10 2023
 import math as m
 import matplotlib as plt
 import numpy as np
+import pandas as pd
 
 # Inputs
 
-Mdes = 4
+Mdes = 2.8
 gamma = 5/3
-thetamin = 0.01
-nolines = 1000
+thetamin = 0.4
+nolines = 5
 Steps = 5
 Throat = 1
 
@@ -43,7 +44,7 @@ def thetamax(Mdes=Mdes):
 
 thetamax = thetamax()
 
-# Find the respectice turning angles
+# Find the respective turning angles
 
 
 def theta(nolines=nolines, thetamin=thetamin):
@@ -237,3 +238,32 @@ def Curve():
 
 
 Curve()
+
+
+# Returns all the values (mainly for degbugging)
+
+def All(nolines=nolines, Steps=Steps):
+    Mach = []
+    cMach = []
+    cMu = []
+    cx = []
+    cy = []
+    points = nolines
+    for l in range(nolines):
+        cx.append(0)
+        cy.append(1)
+        cMach.append(PrandtlMeyerNR(theta[l], Steps))
+        cMu.append(m.degrees(m.asin(1/cMach[l])))
+    for l in range(nolines+1):
+        points = points + l
+    for l in range(points):
+        Mach.append(PrandtlMeyerNR(ThetaAndNu[1][l], Steps))
+    CPoints = pd.DataFrame({f'R\u207A': RiemannInvariants[0], f'R\u207B': RiemannInvariants[1], f'\u03B8': ThetaAndNu[0],
+                           f'\u03BD': ThetaAndNu[1], 'M': Mach, f'\u03BC': Mu, 'x': Coordinates[0], 'y': Coordinates[1]})
+    CLines = pd.DataFrame({f'R\u207A': CharacteristicRiemann[0], f'R\u207B': CharacteristicRiemann[1],
+                          f'\u03B8': theta, f'\u03BD': theta, 'M': cMach, f'\u03BC': cMu, 'x': cx, 'y': cy})
+    CPoints.to_csv("CPoints.csv", sep='\t', encoding='utf-16')
+    CLines.to_csv("CLines.csv", sep='\t', encoding='utf-16')
+
+
+All()
