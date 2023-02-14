@@ -11,12 +11,12 @@ import pandas as pd
 
 # Inputs
 
-Mdes = 7
+Mdes = 3.5
 gamma = 5 / 3
-thetamin = 0.01
-nolines = 200
+thetamin = 0
+nolines = 100
 Steps = 4
-Throat = 1 / 2
+Throat = 1
 Perc = 100
 
 
@@ -155,9 +155,7 @@ def GetMu(ThetaAndNu, nolines=nolines, Steps=Steps):
 # Calculates the coordinates in the X-Y plane of the characteristic line intersections and boundary
 
 
-def Coordinates(
-    theta, Mu, ThetaAndNu, nolines=nolines, Throat=Throat, Steps=Steps
-):
+def Coordinates(theta, Mu, ThetaAndNu, nolines=nolines, Steps=Steps):
     points = nolines
     for l in range(nolines + 1):
         points = points + l
@@ -170,7 +168,7 @@ def Coordinates(
         if leap > 0:
             Y[sym] = 0
             if sym == 0:
-                X[sym] = Throat / (
+                X[sym] = -1 / (
                     m.tan(
                         m.radians(
                             0.5
@@ -358,7 +356,7 @@ def Coordinates(
                     Y[l - 1]
                     - X[l - 1]
                     * m.tan(m.radians(ThetaAndNu[0][l - 1] + Mu[l - 1]))
-                    - Throat
+                    - 1
                 ) / (
                     m.tan(
                         m.radians(0.5 * (theta[nolines - 1] + ThetaAndNu[0][l]))
@@ -396,11 +394,11 @@ def Coordinates(
 # Show only boundary coordinates
 
 
-def BoundaryPoints(Coords, nolines=nolines, Throat=Throat):
+def BoundaryPoints(Coords, nolines=nolines):
     pos = -1
     BP = []
     X = [0]
-    Y = [Throat]
+    Y = [1]
     for l in reversed(range(nolines + 2)):
         if l > 1:
             pos = pos + l
@@ -474,10 +472,42 @@ def Cutoff(BP, Perc=Perc):
     return [CutX, CutY]
 
 
+# Show characteristic lines
+
+
+def ShowCLines(BP, color, size):
+    LX = []
+    LY = []
+    point = 0
+    for l in range(nolines + 1):
+        if l != 0:
+            LX.append(BP[0][l])
+            LY.append(-1 * BP[1][l])
+    for l in LX:
+        lX = [0]
+        lY = [1]
+        lX.append(l)
+        lY.append(LY[point])
+        rY = [i * -1 for i in lY]
+        plt.plot(lX, lY, c=color, lw=size)
+        plt.plot(lX, rY, c=color, lw=size)
+        point = point + 1
+
+
 # Combine all the functions to get a result
 
 
-def AllFunctions(Mdes, gamma, thetamin, nolines, Steps, Throat, Perc):
+def AllFunctions(
+    Mdes,
+    gamma,
+    thetamin,
+    nolines,
+    Steps,
+    Perc,
+    color="blue",
+    size=1,
+    size2=0.1,
+):
     PM = PrandtlMeyer(Mdes, gamma)
     TMax = thetamax(PM, Mdes)
     theta = Ctheta(TMax, nolines, thetamin)
@@ -485,19 +515,21 @@ def AllFunctions(Mdes, gamma, thetamin, nolines, Steps, Throat, Perc):
     RI = RiemannInvariants(CR, nolines)
     ThetaAndNu = GetThetaAndNu(RI, nolines)
     Mu = GetMu(ThetaAndNu, nolines, Steps)
-    Coords = Coordinates(theta, Mu, ThetaAndNu, nolines, Throat, Steps)
-    BP = BoundaryPoints(Coords, nolines, Throat)
+    Coords = Coordinates(theta, Mu, ThetaAndNu, nolines, Steps)
+    BP = BoundaryPoints(Coords, nolines)
     Boundary = Cutoff(BP, Perc)
     All(theta, RI, ThetaAndNu, Mu, Coords, CR, nolines, Steps)
     plt.figure(figsize=(10, 6), dpi=100)
-    plt.plot(Boundary[0], Boundary[1], c="blue")
+    plt.plot(Boundary[0], Boundary[1], c=color, lw=size)
     B2 = []
     for l in Boundary[1]:
         B2.append(-1 * l)
-    plt.plot(Boundary[0], B2, c="blue")
-    plt.xlim([-2, 170])
-    plt.ylim([-21, 21])
+    plt.plot(Boundary[0], B2, c=color, lw=size)
+    # plt.xlim([-1, 11])
+    # plt.ylim([-6, 6])
+    ShowCLines(Boundary, color, size2)
+    plt.savefig("Nozzle.png")
     # plt.scatter(Coords[0], Coords[1])
 
 
-AllFunctions(Mdes, gamma, thetamin, nolines, Steps, Throat, Perc)
+AllFunctions(Mdes, gamma, thetamin, nolines, Steps, Perc)
