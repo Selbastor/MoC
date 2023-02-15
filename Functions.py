@@ -494,3 +494,17 @@ def ShowCLines(BP, color, size, Throat=Throat):
         plt.plot(lX, lY, c=color, lw=size)
         plt.plot(lX, rY, c=color, lw=size)
         point = point + 1
+
+
+# 1D approximation
+
+
+def oneD(points, Mdes, gamma):
+    X = []
+    Y = []
+    LX = (1 / Mdes) * (
+        ((2 / (gamma + 1)) * (1 + (((gamma - 1) / 2) * (Mdes**2))))
+        ** ((gamma + 1) / (2 * (gamma - 1)))
+    )
+    for l in points:
+        Div = (Mdes - 1) / points
