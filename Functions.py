@@ -498,14 +498,10 @@ def ShowCLines(BP, color, size, Throat=Throat):
 
 # 1D approximation
 
-"""
-def oneD(points, Mdes, gamma):
-    X = []
-    Y = []
-    LX = (1 / Mdes) * (
+
+def oneD(Mdes, gamma):
+    Ae = (1 / Mdes) * (
         ((2 / (gamma + 1)) * (1 + (((gamma - 1) / 2) * (Mdes**2))))
         ** ((gamma + 1) / (2 * (gamma - 1)))
     )
-    for l in points:
-        Div = (Mdes - 1) / points
-"""
+    return Ae
