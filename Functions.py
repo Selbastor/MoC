@@ -511,6 +511,7 @@ def Rao(Mdes, gamma):
     thetaE = []
     thetaN = []
     ye = []
+    # ye = P*xe+Q+(S*xe+T)**0.5
     xe = []
     P = (
         ye * m.tan(m.radians(thetaN))
