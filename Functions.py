@@ -505,3 +505,7 @@ def oneD(Mdes, gamma):
         ** ((gamma + 1) / (2 * (gamma - 1)))
     )
     return Ae
+
+
+def Rao(Mdes, gamma):
+    return None
