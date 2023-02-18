@@ -508,4 +508,28 @@ def oneD(Mdes, gamma):
 
 
 def Rao(Mdes, gamma):
-    return None
+    thetaE = []
+    thetaN = []
+    ye = []
+    xe = []
+    P = (
+        ye * m.tan(m.radians(thetaN))
+        + ye * m.tan(m.radians(thetaE))
+        - 2 * xe * m.tan(m.radians(thetaE)) * m.tan(m.radians(thetaN))
+    ) / (2 * ye - xe * m.tan(m.radians(thetaN)) - xe * m.tan(m.radians(thetaE)))
+    S = (((ye - P * xe) ** 2) * (m.tan(m.radians(thetaN)) - P)) / (
+        xe * m.tan(m.radians(thetaN)) - ye
+    )
+    Q = (S) / (2 * (m.tan(m.radians(thetaN)) - P))
+    T = Q**2
+
+
+def Conical():
+    Epsilon = []
+    Rt = []
+    R1 = []
+    thetaE = []
+    L = (
+        Rt * ((Epsilon**0.5) - 1) + R1 * (1 / (m.cos(m.radians(thetaE)) - 1))
+    ) / m.tan(m.radians(thetaE))
+    return L
