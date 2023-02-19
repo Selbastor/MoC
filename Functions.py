@@ -534,5 +534,3 @@ def Conical():
         Rt * ((Epsilon**0.5) - 1) + R1 * (1 / (m.cos(m.radians(thetaE)) - 1))
     ) / m.tan(m.radians(thetaE))
     return L
-    for x in y:
-        
