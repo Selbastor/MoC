@@ -530,6 +530,8 @@ def Conical():
     Rt = []
     R1 = []
     thetaE = []
+    X = []
+    Y = []
     L = (
         Rt * ((Epsilon**0.5) - 1) + R1 * (1 / (m.cos(m.radians(thetaE)) - 1))
     ) / m.tan(m.radians(thetaE))
