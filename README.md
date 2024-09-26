@@ -1,6 +1,5 @@
-# Rocket Nozzle Calculator
+# Nozzle Geometry Calculator
 This is a simple python implementation which utilizes the method of characteristics approach to calculate the size and shape of a Nozzle given the specific heat ratio and the exit Mach number.
-Furthermore it allows the comparison against a simple conical and Rao Nozzle with similar specifications.
 
 The focus is on flexibility allowing the changing of most Nozzle parameters
 
